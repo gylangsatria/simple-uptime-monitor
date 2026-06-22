@@ -14,7 +14,7 @@ RUN npm install --production
 COPY . .
 
 # Expose port
-EXPOSE 3000
+EXPOSE 5090
 
 # Jalankan aplikasi
 CMD ["node", "server.js"]
