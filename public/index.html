@@ -1,396 +1,43 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Uptime Monitor - Status Layanan</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 800px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2em;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 0.9em;
-        }
-
-        .status-summary {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
-            flex-wrap: wrap;
-        }
-
-        .status-item {
-            text-align: center;
-        }
-
-        .status-item .number {
-            font-size: 2em;
-            font-weight: bold;
-            display: block;
-        }
-
-        .status-item .label {
-            color: #666;
-            font-size: 0.85em;
-        }
-
-        .status-item .number.up {
-            color: #10b981;
-        }
-
-        .status-item .number.down {
-            color: #ef4444;
-        }
-
-        .status-item .number.total {
-            color: #3b82f6;
-        }
-
-        .service-card {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s ease;
-            border-left: 4px solid #10b981;
-        }
-
-        .service-card:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .service-card.down {
-            border-left-color: #ef4444;
-            background: #fef2f2;
-        }
-
-        .service-info {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .service-name {
-            font-weight: 600;
-            color: #333;
-            font-size: 1.1em;
-        }
-
-        .service-url {
-            color: #666;
-            font-size: 0.85em;
-            word-break: break-all;
-        }
-
-        .service-status {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .status-badge {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-            background: #10b981;
-            color: white;
-        }
-
-        .status-badge.down {
-            background: #ef4444;
-        }
-
-        .history-container {
-            margin-top: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .history-title {
-            font-size: 0.85em;
-            color: #555;
-            font-weight: 600;
-        }
-
-        .history-chart {
-            display: grid;
-            grid-template-columns: repeat(24, minmax(8px, 1fr));
-            gap: 3px;
-            padding: 8px 0;
-        }
-
-        .history-bar {
-            width: 100%;
-            min-height: 18px;
-            border-radius: 999px;
-            background: #d1d5db;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .history-bar.up {
-            background: #10b981;
-        }
-
-        .history-bar.down {
-            background: #ef4444;
-        }
-
-        .history-legend {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            font-size: 0.8em;
-            color: #666;
-        }
-
-        .history-legend span {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .history-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .history-dot.up {
-            background: #10b981;
-        }
-
-        .history-dot.down {
-            background: #ef4444;
-        }
-
-        .last-check {
-            color: #999;
-            font-size: 0.8em;
-        }
-
-        .refresh-btn {
-            display: block;
-            margin: 20px auto 0;
-            padding: 12px 30px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .refresh-btn:hover {
-            background: #5a67d8;
-            transform: scale(1.05);
-        }
-
-        .refresh-btn:active {
-            transform: scale(0.95);
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #999;
-            font-size: 0.8em;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-
-        .error-msg {
-            color: #ef4444;
-            font-size: 0.85em;
-            margin-top: 5px;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
-
-            .service-card {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .service-status {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .status-summary {
-                gap: 20px;
-            }
-        }
-    </style>
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
     <div class="container">
-        <h1>Status Layanan</h1>
-        <p class="subtitle">Monitor ketersediaan layanan secara real-time</p>
+      <h1>Status Layanan</h1>
+      <p class="subtitle">Monitor ketersediaan layanan secara real-time</p>
 
-        <div class="status-summary" id="summary">
-            <div class="status-item">
-                <span class="number total" id="totalServices">0</span>
-                <span class="label">Total Layanan</span>
-            </div>
-            <div class="status-item">
-                <span class="number up" id="upServices">0</span>
-                <span class="label">Online</span>
-            </div>
-            <div class="status-item">
-                <span class="number down" id="downServices">0</span>
-                <span class="label">Offline</span>
-            </div>
+      <div class="status-summary" id="summary">
+        <div class="status-item">
+          <span class="number total" id="totalServices">0</span>
+          <span class="label">Total Layanan</span>
         </div>
-
-        <div id="servicesList">
-            <div class="loading">Memuat data layanan...</div>
+        <div class="status-item">
+          <span class="number up" id="upServices">0</span>
+          <span class="label">Online</span>
         </div>
+        <div class="status-item">
+          <span class="number down" id="downServices">0</span>
+          <span class="label">Offline</span>
+        </div>
+      </div>
 
-        <button class="refresh-btn" onclick="checkAllServices()">🔄 Refresh Status</button>
-        <div class="footer">Terakhir diperbarui: <span id="lastUpdate">-</span></div>
+      <div id="servicesList">
+        <div class="loading">Memuat data layanan...</div>
+      </div>
+
+      <button class="refresh-btn" onclick="checkAllServices()">
+        🔄 Refresh Status
+      </button>
+      <div class="footer">
+        Terakhir diperbarui: <span id="lastUpdate">-</span>
+      </div>
     </div>
 
-    <script>
-        // ===== FUNGSI CEK STATUS VIA API =====
-        async function checkAllServices() {
-            const listElement = document.getElementById('servicesList');
-            listElement.innerHTML = '<div class="loading">🔍 Mengecek layanan...</div>';
-
-            try {
-                const response = await fetch('/api/status');
-                const result = await response.json();
-                
-                if (result.success) {
-                    renderServices(result.data);
-                    updateSummary(result.data);
-                    document.getElementById('lastUpdate').textContent = new Date(result.timestamp).toLocaleString('id-ID');
-                } else {
-                    throw new Error(result.error || 'Gagal memuat data');
-                }
-            } catch (error) {
-                console.error('Error fetching status:', error);
-                listElement.innerHTML = `
-                    <div class="loading" style="color: #ef4444;">
-                        ❌ Gagal memuat data: ${error.message}
-                        <br><br>
-                        <button onclick="checkAllServices()" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                            Coba Lagi
-                        </button>
-                    </div>
-                `;
-            }
-        }
-
-        // ===== RENDER HASIL =====
-        function renderServices(results) {
-            const listElement = document.getElementById('servicesList');
-            
-            if (results.length === 0) {
-                listElement.innerHTML = '<div class="loading">Tidak ada layanan yang dikonfigurasi</div>';
-                return;
-            }
-
-            listElement.innerHTML = results.map(service => `
-                <div class="service-card ${service.status === 'down' ? 'down' : ''}">
-                    <div class="service-info">
-                        <div class="service-name">${service.name}</div>
-                        <div class="service-url">${service.url}</div>
-                        ${service.responseTime ? `<div style="color:#666;font-size:0.8em;">⏱️ ${service.responseTime}ms</div>` : ''}
-                        ${service.statusCode ? `<div style="color:#666;font-size:0.8em;">HTTP ${service.statusCode}</div>` : ''}
-                        ${service.error ? `<div class="error-msg">⚠️ ${service.error}</div>` : ''}
-                        <div class="history-container">
-                            <div class="history-title">Status history (24 check terakhir)</div>
-                            <div class="history-chart">
-                                ${service.history.map(point => `
-                                    <div class="history-bar ${point.status}">
-                                    </div>
-                                `).join('')}
-                            </div>
-                            <div class="history-legend">
-                                <span><span class="history-dot up"></span>Online</span>
-                                <span><span class="history-dot down"></span>Offline</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="service-status">
-                        <span class="status-badge ${service.status === 'down' ? 'down' : ''}">
-                            ${service.status === 'up' ? '✅ Online' : '❌ Offline'}
-                        </span>
-                        <span class="last-check">${new Date(service.lastChecked).toLocaleTimeString('id-ID')}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function updateSummary(results) {
-            const total = results.length;
-            const up = results.filter(r => r.status === 'up').length;
-            const down = results.filter(r => r.status === 'down').length;
-
-            document.getElementById('totalServices').textContent = total;
-            document.getElementById('upServices').textContent = up;
-            document.getElementById('downServices').textContent = down;
-        }
-
-        // ===== AUTO REFRESH =====
-        // Refresh setiap 30 detik
-        setInterval(checkAllServices, 30000);
-
-        // ===== LOAD PERTAMA =====
-        document.addEventListener('DOMContentLoaded', checkAllServices);
-    </script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>
