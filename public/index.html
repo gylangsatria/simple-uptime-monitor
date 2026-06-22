@@ -141,6 +141,72 @@
             background: #ef4444;
         }
 
+        .history-container {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-title {
+            font-size: 0.85em;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .history-chart {
+            display: grid;
+            grid-template-columns: repeat(24, minmax(8px, 1fr));
+            gap: 3px;
+            padding: 8px 0;
+        }
+
+        .history-bar {
+            width: 100%;
+            min-height: 18px;
+            border-radius: 999px;
+            background: #d1d5db;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .history-bar.up {
+            background: #10b981;
+        }
+
+        .history-bar.down {
+            background: #ef4444;
+        }
+
+        .history-legend {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .history-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .history-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .history-dot.up {
+            background: #10b981;
+        }
+
+        .history-dot.down {
+            background: #ef4444;
+        }
+
         .last-check {
             color: #999;
             font-size: 0.8em;
@@ -285,6 +351,19 @@
                         ${service.responseTime ? `<div style="color:#666;font-size:0.8em;">⏱️ ${service.responseTime}ms</div>` : ''}
                         ${service.statusCode ? `<div style="color:#666;font-size:0.8em;">HTTP ${service.statusCode}</div>` : ''}
                         ${service.error ? `<div class="error-msg">⚠️ ${service.error}</div>` : ''}
+                        <div class="history-container">
+                            <div class="history-title">Status history (24 check terakhir)</div>
+                            <div class="history-chart">
+                                ${service.history.map(point => `
+                                    <div class="history-bar ${point.status}">
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="history-legend">
+                                <span><span class="history-dot up"></span>Online</span>
+                                <span><span class="history-dot down"></span>Offline</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="service-status">
                         <span class="status-badge ${service.status === 'down' ? 'down' : ''}">

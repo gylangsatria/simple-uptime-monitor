@@ -20,6 +20,11 @@ const services = [
     { name: 'API Harga BBM', url: 'https://api.gylang.my.id/api/harga-bbm' }
 ];
 
+const serviceHistory = {};
+services.forEach((service) => {
+    serviceHistory[service.url] = [];
+});
+
 // ===== ENDPOINT CEK STATUS =====
 app.get('/api/status', async (req, res) => {
     try {
@@ -32,15 +37,26 @@ app.get('/api/status', async (req, res) => {
                         validateStatus: () => true // terima semua status
                     });
                     
-                    return {
+                    const result = {
                         ...service,
                         status: response.status < 400 ? 'up' : 'down',
                         statusCode: response.status,
                         responseTime: Date.now() - startTime,
                         lastChecked: new Date().toISOString()
                     };
+
+                    const history = serviceHistory[service.url];
+                    history.push({
+                        timestamp: result.lastChecked,
+                        status: result.status,
+                        statusCode: result.statusCode,
+                        responseTime: result.responseTime
+                    });
+                    if (history.length > 24) history.shift();
+
+                    return { ...result, history: [...history] };
                 } catch (error) {
-                    return {
+                    const result = {
                         ...service,
                         status: 'down',
                         statusCode: error.response?.status || 0,
@@ -48,6 +64,17 @@ app.get('/api/status', async (req, res) => {
                         lastChecked: new Date().toISOString(),
                         error: error.message
                     };
+
+                    const history = serviceHistory[service.url];
+                    history.push({
+                        timestamp: result.lastChecked,
+                        status: result.status,
+                        statusCode: result.statusCode,
+                        responseTime: result.responseTime
+                    });
+                    if (history.length > 24) history.shift();
+
+                    return { ...result, history: [...history] };
                 }
             })
         );
