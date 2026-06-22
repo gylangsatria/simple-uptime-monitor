@@ -4,7 +4,7 @@ services:
     container_name: simple-uptime-monitor
     restart: always
     ports:
-      - "5090:3000"
+      - "5090:5090"
     environment:
       - NODE_ENV=production
       - PORT=3000
