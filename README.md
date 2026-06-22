@@ -39,6 +39,45 @@ Akses aplikasi pada `http://localhost:5090`.
 docker compose down
 ```
 
+## Jaringan Docker
+
+File `docker-compose.yml` menggunakan sebuah network eksternal bernama `cloudflare-tunnel-vps`.
+Jika Anda tidak menggunakan network eksternal tersebut, ganti konfigurasi `networks` di `docker-compose.yml` dengan network internal atau hapus bagian `networks` sepenuhnya.
+
+Contoh network internal sederhana:
+
+```yaml
+services:
+  uptime-monitor:
+    build: .
+    container_name: simple-uptime-monitor
+    restart: always
+    ports:
+      - "5090:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+```
+
+Atau jika tetap ingin menggunakan Docker Compose network:
+
+```yaml
+services:
+  uptime-monitor:
+    build: .
+    container_name: simple-uptime-monitor
+    restart: always
+    ports:
+      - "5090:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+
+networks:
+  cloudflare-tunnel-vps:
+    external: true
+```
+
 ## Konfigurasi Layanan
 
 Layanan yang dipantau dikonfigurasi di file `server.js` pada variabel `services`.
