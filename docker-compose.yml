@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  uptime-monitor:
+    build: .
+    container_name: simple-uptime-monitor
+    restart: always
+    ports:
+      - "5090:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      - ./public:/app/public:ro
+      - ./server.js:/app/server.js:ro
+    networks:
+      - cloudflare-tunnel-vps
+
+networks:
+  cloudflare-tunnel-vps:
+    external: true
