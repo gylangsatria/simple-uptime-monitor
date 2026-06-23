@@ -8,31 +8,64 @@
   </head>
   <body>
     <div class="container">
-      <h1>Status Layanan</h1>
-      <p class="subtitle">Monitor ketersediaan layanan secara real-time</p>
+      <!-- Navigation -->
+      <nav class="nav-menu">
+        <button
+          class="nav-item active"
+          data-page="dashboard"
+          onclick="showPage('dashboard')"
+        >
+          Dashboard
+        </button>
+        <button
+          class="nav-item"
+          data-page="history"
+          onclick="showPage('history')"
+        >
+          History Down
+        </button>
+      </nav>
 
-      <div class="status-summary" id="summary">
-        <div class="status-item">
-          <span class="number total" id="totalServices">0</span>
-          <span class="label">Total Layanan</span>
+      <!-- Dashboard Page -->
+      <div id="page-dashboard" class="page active">
+        <h1>Status Layanan</h1>
+        <p class="subtitle">Monitor ketersediaan layanan secara real-time</p>
+
+        <div class="status-summary" id="summary">
+          <div class="status-item">
+            <span class="number total" id="totalServices">0</span>
+            <span class="label">Total Layanan</span>
+          </div>
+          <div class="status-item">
+            <span class="number up" id="upServices">0</span>
+            <span class="label">Online</span>
+          </div>
+          <div class="status-item">
+            <span class="number down" id="downServices">0</span>
+            <span class="label">Offline</span>
+          </div>
         </div>
-        <div class="status-item">
-          <span class="number up" id="upServices">0</span>
-          <span class="label">Online</span>
+
+        <div id="servicesList">
+          <div class="loading">Memuat data layanan...</div>
         </div>
-        <div class="status-item">
-          <span class="number down" id="downServices">0</span>
-          <span class="label">Offline</span>
+
+        <button class="refresh-btn" onclick="checkAllServices()">
+          Refresh Status
+        </button>
+      </div>
+
+      <!-- History Page -->
+      <div id="page-history" class="page">
+        <h1>History</h1>
+        <p class="subtitle">Riwayat lengkap kapan layanan down dan up</p>
+
+        <div id="historyList">
+          <div class="loading">Memuat riwayat layanan...</div>
         </div>
       </div>
 
-      <div id="servicesList">
-        <div class="loading">Memuat data layanan...</div>
-      </div>
-
-      <button class="refresh-btn" onclick="checkAllServices()">
-        🔄 Refresh Status
-      </button>
+      <!-- Footer -->
       <div class="footer">
         Terakhir diperbarui: <span id="lastUpdate">-</span>
       </div>

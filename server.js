@@ -25,6 +25,7 @@ const services = [
 ];
 
 const serviceHistory = {};
+const MAX_HISTORY = 100; // simpan 100 check terakhir untuk history detail
 services.forEach((service) => {
   serviceHistory[service.url] = [];
 });
@@ -56,7 +57,78 @@ app.get("/api/status", async (req, res) => {
             statusCode: result.statusCode,
             responseTime: result.responseTime,
           });
-          if (history.length > 24) history.shift();
+          if (history.length > MAX_HISTORY) history.shift();
+
+          // Kirim 24 terakhir untuk bar chart
+          const barHistory = history.slice(-24);
+          return { ...result, history: [...barHistory] };
+        } catch (error) {
+          const result = {
+            ...service,
+            status: "down",
+            statusCode: error.response?.status || 0,
+            responseTime: null,
+            lastChecked: new Date().toISOString(),
+            error: error.message,
+          };
+
+          const history = serviceHistory[service.url];
+          history.push({
+            timestamp: result.lastChecked,
+            status: result.status,
+            statusCode: result.statusCode,
+            responseTime: result.responseTime,
+          });
+          if (history.length > MAX_HISTORY) history.shift();
+
+          const barHistory = history.slice(-24);
+          return { ...result, history: [...barHistory] };
+        }
+      }),
+    );
+
+    res.json({
+      success: true,
+      data: results,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// ===== ENDPOINT HISTORY DETAIL =====
+app.get("/api/history", async (req, res) => {
+  try {
+    // Refresh semua service dulu
+    const results = await Promise.all(
+      services.map(async (service) => {
+        try {
+          const startTime = Date.now();
+          const response = await axios.get(service.url, {
+            timeout: 5000,
+            validateStatus: () => true,
+          });
+
+          const result = {
+            ...service,
+            status: response.status < 400 ? "up" : "down",
+            statusCode: response.status,
+            responseTime: Date.now() - startTime,
+            lastChecked: new Date().toISOString(),
+          };
+
+          const history = serviceHistory[service.url];
+          history.push({
+            timestamp: result.lastChecked,
+            status: result.status,
+            statusCode: result.statusCode,
+            responseTime: result.responseTime,
+          });
+          if (history.length > MAX_HISTORY) history.shift();
 
           return { ...result, history: [...history] };
         } catch (error) {
@@ -76,7 +148,7 @@ app.get("/api/status", async (req, res) => {
             statusCode: result.statusCode,
             responseTime: result.responseTime,
           });
-          if (history.length > 24) history.shift();
+          if (history.length > MAX_HISTORY) history.shift();
 
           return { ...result, history: [...history] };
         }
