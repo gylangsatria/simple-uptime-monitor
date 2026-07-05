@@ -28,6 +28,38 @@ body {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
+/* ===== LANGUAGE TOGGLE ===== */
+.lang-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.lang-btn {
+  padding: 4px 14px;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  background: transparent;
+  color: #667eea;
+  font-size: 0.78em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  letter-spacing: 0.5px;
+}
+
+.lang-btn:hover {
+  background: #667eea;
+  color: white;
+}
+
+.lang-btn:active {
+  transform: scale(0.93);
+}
+
 h1 {
   text-align: center;
   color: #333;
@@ -522,6 +554,11 @@ h1 {
     padding: 8px 12px;
   }
 
+  .lang-btn {
+    font-size: 0.72em;
+    padding: 3px 12px;
+  }
+
   .history-service-stats {
     gap: 6px;
   }
@@ -623,6 +660,11 @@ h1 {
 
   .mini-bar {
     height: 8px;
+  }
+
+  .lang-btn {
+    font-size: 0.7em;
+    padding: 3px 10px;
   }
 }
 
@@ -744,6 +786,11 @@ h1 {
   .nav-item {
     font-size: 0.75em;
     padding: 6px 10px;
+  }
+
+  .lang-btn {
+    font-size: 0.65em;
+    padding: 2px 10px;
   }
 
   .footer {
