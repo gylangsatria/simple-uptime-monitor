@@ -5,14 +5,14 @@ Monitor ketersediaan layanan HTTP/S secara real-time dengan tampilan dashboard d
 
 ## Fitur
 
-- 🔍 **Monitor Multi-layanan** — Pantau beberapa layanan HTTP/S sekaligus.
-- 📊 **Dashboard Real-time** — Status online/offline, response time, dan kode HTTP.
-- 📈 **Bar Chart History** — Grafik history 24 check terakhir (responsive: menyesuaikan jumlah bar di mobile).
-- 📜 **History Down** — Halaman detail riwayat lengkap kapan layanan down dan up, lengkap dengan timeline dan persentase uptime.
-- 🌐 **Bilingual (ID/EN)** — Dukungan Bahasa Indonesia dan English, bisa diganti kapan saja.
-- 📱 **Responsive Design** — Tampilan optimal di desktop, tablet, dan mobile.
-- 🔄 **Auto Refresh** — Pengecekan otomatis setiap 30 detik.
-- 🐳 **Docker Support** — Mudah dijalankan dengan Docker Compose.
+- **Monitor Multi-layanan** — Pantau beberapa layanan HTTP/S sekaligus.
+- **Dashboard Real-time** — Status online/offline, response time, dan kode HTTP.
+- **Bar Chart History** — Grafik history 24 check terakhir (responsive: menyesuaikan jumlah bar di mobile).
+- **History Down** — Halaman detail riwayat lengkap kapan layanan down dan up, lengkap dengan timeline dan persentase uptime.
+- **Bilingual (ID/EN)** — Dukungan Bahasa Indonesia dan English, bisa diganti kapan saja.
+- **Responsive Design** — Tampilan optimal di desktop, tablet, dan mobile.
+- **Auto Refresh** — Pengecekan otomatis setiap 30 detik.
+- **Docker Support** — Mudah dijalankan dengan Docker Compose.
 
 ## Struktur Proyek
 
