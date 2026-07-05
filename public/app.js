@@ -1,22 +1,125 @@
+// ===== i18n — BAHASA INGGRIS & INDONESIA =====
+const LANG_STORAGE_KEY = "uptime-lang";
+
+const translations = {
+  id: {
+    title: "Uptime Monitor - Status Layanan",
+    navDashboard: "Dashboard",
+    navHistory: "History Down",
+    dashboardTitle: "Status Layanan",
+    dashboardSubtitle: "Monitor ketersediaan layanan secara real-time",
+    totalLayanan: "Total Layanan",
+    onlineLabel: "Online",
+    offlineLabel: "Offline",
+    refreshBtn: "\u{1F504} Refresh Status",
+    historyTitle: "History Down",
+    historySubtitle: "Riwayat lengkap kapan layanan down dan up",
+    footerText: "Terakhir diperbarui:",
+    checkingServices: "\u{1F50D} Mengecek layanan...",
+    fetchFailed: "Gagal memuat data",
+    tryAgain: "Coba Lagi",
+    noServices: "Tidak ada layanan yang dikonfigurasi",
+    statusHistory: "Status history ({count} check terakhir)",
+    online: "Online",
+    offline: "Offline",
+    onlineBadge: "{check} Online",
+    offlineBadge: "{cross} Offline",
+    loadingHistory: "\u{1F50D} Memuat riwayat...",
+    fetchHistoryFailed: "Gagal memuat riwayat",
+    noHistoryData: "Tidak ada data riwayat",
+    na: "N/A",
+    consecutiveChecks: "{count} check berturut-turut",
+    locale: "id-ID",
+  },
+  en: {
+    title: "Uptime Monitor - Service Status",
+    navDashboard: "Dashboard",
+    navHistory: "Down History",
+    dashboardTitle: "Service Status",
+    dashboardSubtitle: "Monitor service availability in real-time",
+    totalLayanan: "Total Services",
+    onlineLabel: "Online",
+    offlineLabel: "Offline",
+    refreshBtn: "\u{1F504} Refresh Status",
+    historyTitle: "Down History",
+    historySubtitle: "Complete history of when services went down and up",
+    footerText: "Last updated:",
+    checkingServices: "\u{1F50D} Checking services...",
+    fetchFailed: "Failed to load data",
+    tryAgain: "Try Again",
+    noServices: "No services configured",
+    statusHistory: "Status history (last {count} checks)",
+    online: "Online",
+    offline: "Offline",
+    onlineBadge: "{check} Online",
+    offlineBadge: "{cross} Offline",
+    loadingHistory: "\u{1F50D} Loading history...",
+    fetchHistoryFailed: "Failed to load history",
+    noHistoryData: "No history data available",
+    na: "N/A",
+    consecutiveChecks: "{count} consecutive checks",
+    locale: "en-US",
+  },
+};
+
+let currentLang = localStorage.getItem(LANG_STORAGE_KEY) || "id";
+
+function t(key, params = {}) {
+  let text = translations[currentLang][key] || translations["id"][key] || key;
+  for (const [k, v] of Object.entries(params)) {
+    text = text.replace(`{${k}}`, v);
+  }
+  return text;
+}
+
+function locale() {
+  return translations[currentLang].locale;
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem(LANG_STORAGE_KEY, lang);
+  document.documentElement.lang = lang === "en" ? "en" : "id";
+  applyStaticTranslations();
+  // Re-render halaman yang aktif
+  const activePage = document.querySelector(".page.active");
+  if (activePage) {
+    const id = activePage.id.replace("page-", "");
+    if (id === "dashboard") checkAllServices();
+    else if (id === "history") loadHistoryData();
+  }
+}
+
+function toggleLanguage() {
+  setLanguage(currentLang === "id" ? "en" : "id");
+}
+
+// Terjemahkan elemen HTML statis yang punya data-i18n
+function applyStaticTranslations() {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    el.textContent = t(key);
+  });
+  // Update tombol toggle
+  const toggleBtn = document.getElementById("langToggle");
+  if (toggleBtn) toggleBtn.textContent = currentLang === "id" ? "EN" : "ID";
+}
+
 // ===== NAVIGASI =====
 function showPage(pageName) {
-  // Sembunyikan semua halaman
   document.querySelectorAll(".page").forEach((page) => {
     page.classList.remove("active");
   });
 
-  // Nonaktifkan semua nav item
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.classList.remove("active");
   });
 
-  // Aktifkan halaman dan nav yang dipilih
   document.getElementById(`page-${pageName}`).classList.add("active");
   document
     .querySelector(`.nav-item[data-page="${pageName}"]`)
     .classList.add("active");
 
-  // Load data jika halaman history
   if (pageName === "history") {
     loadHistoryData();
   }
@@ -25,7 +128,7 @@ function showPage(pageName) {
 // ===== FUNGSI CEK STATUS VIA API =====
 async function checkAllServices() {
   const listElement = document.getElementById("servicesList");
-  listElement.innerHTML = '<div class="loading">🔍 Mengecek layanan...</div>';
+  listElement.innerHTML = `<div class="loading">${t("checkingServices")}</div>`;
 
   try {
     const response = await fetch("/api/status");
@@ -36,16 +139,16 @@ async function checkAllServices() {
       updateSummary(result.data);
       updateFooterTimestamp(result.timestamp);
     } else {
-      throw new Error(result.error || "Gagal memuat data");
+      throw new Error(result.error || t("fetchFailed"));
     }
   } catch (error) {
     console.error("Error fetching status:", error);
     listElement.innerHTML = `
             <div class="loading" style="color: #ef4444;">
-                ❌ Gagal memuat data: ${error.message}
+                ❌ ${t("fetchFailed")}: ${error.message}
                 <br><br>
                 <button onclick="checkAllServices()" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                    Coba Lagi
+                    ${t("tryAgain")}
                 </button>
             </div>
         `;
@@ -66,8 +169,7 @@ function renderServices(results) {
   const listElement = document.getElementById("servicesList");
 
   if (results.length === 0) {
-    listElement.innerHTML =
-      '<div class="loading">Tidak ada layanan yang dikonfigurasi</div>';
+    listElement.innerHTML = `<div class="loading">${t("noServices")}</div>`;
     return;
   }
 
@@ -85,7 +187,7 @@ function renderServices(results) {
                 ${service.statusCode ? `<div style="color:#666;font-size:0.8em;">HTTP ${service.statusCode}</div>` : ""}
                 ${service.error ? `<div class="error-msg">⚠️ ${service.error}</div>` : ""}
                 <div class="history-container">
-                    <div class="history-title">Status history (${barCount} check terakhir)</div>
+                    <div class="history-title">${t("statusHistory", { count: barCount })}</div>
                     <div class="history-chart" style="grid-template-columns: repeat(${history.length}, 1fr);">
                         ${history
                           .map(
@@ -97,16 +199,16 @@ function renderServices(results) {
                           .join("")}
                     </div>
                     <div class="history-legend">
-                        <span><span class="history-dot up"></span>Online</span>
-                        <span><span class="history-dot down"></span>Offline</span>
+                        <span><span class="history-dot up"></span>${t("online")}</span>
+                        <span><span class="history-dot down"></span>${t("offline")}</span>
                     </div>
                 </div>
             </div>
             <div class="service-status">
                 <span class="status-badge ${service.status === "down" ? "down" : ""}">
-                    ${service.status === "up" ? "✅ Online" : "❌ Offline"}
+                    ${service.status === "up" ? t("onlineBadge", { check: "✅" }) : t("offlineBadge", { cross: "❌" })}
                 </span>
-                <span class="last-check">${new Date(service.lastChecked).toLocaleTimeString("id-ID")}</span>
+                <span class="last-check">${new Date(service.lastChecked).toLocaleTimeString(locale())}</span>
             </div>
         </div>
       `;
@@ -127,13 +229,13 @@ function updateSummary(results) {
 function updateFooterTimestamp(timestamp) {
   document.getElementById("lastUpdate").textContent = new Date(
     timestamp,
-  ).toLocaleString("id-ID");
+  ).toLocaleString(locale());
 }
 
 // ===== HISTORY DOWN =====
 async function loadHistoryData() {
   const historyList = document.getElementById("historyList");
-  historyList.innerHTML = '<div class="loading">🔍 Memuat riwayat...</div>';
+  historyList.innerHTML = `<div class="loading">${t("loadingHistory")}</div>`;
 
   try {
     const response = await fetch("/api/history");
@@ -143,16 +245,16 @@ async function loadHistoryData() {
       renderHistory(result.data);
       updateFooterTimestamp(result.timestamp);
     } else {
-      throw new Error(result.error || "Gagal memuat data");
+      throw new Error(result.error || t("fetchFailed"));
     }
   } catch (error) {
     console.error("Error fetching history:", error);
     historyList.innerHTML = `
       <div class="loading" style="color: #ef4444;">
-        ❌ Gagal memuat riwayat: ${error.message}
+        ❌ ${t("fetchHistoryFailed")}: ${error.message}
         <br><br>
         <button onclick="loadHistoryData()" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
-          Coba Lagi
+          ${t("tryAgain")}
         </button>
       </div>
     `;
@@ -163,7 +265,7 @@ function renderHistory(data) {
   const historyList = document.getElementById("historyList");
 
   if (!data || data.length === 0) {
-    historyList.innerHTML = '<div class="loading">Tidak ada data riwayat</div>';
+    historyList.innerHTML = `<div class="loading">${t("noHistoryData")}</div>`;
     return;
   }
 
@@ -174,14 +276,16 @@ function renderHistory(data) {
     return downB - downA;
   });
 
+  const loc = locale();
+
   historyList.innerHTML = sorted
     .map((service) => {
-      const history = [...service.history].reverse(); // terbaru di atas
+      const history = [...service.history].reverse();
       const downCount = history.filter((h) => h.status === "down").length;
       const upCount = history.filter((h) => h.status === "up").length;
       const totalCount = history.length;
       const uptimePercent =
-        totalCount > 0 ? ((upCount / totalCount) * 100).toFixed(1) : "N/A";
+        totalCount > 0 ? ((upCount / totalCount) * 100).toFixed(1) : t("na");
 
       // Kelompokkan history menjadi segmen up/down berurutan
       const segments = [];
@@ -214,17 +318,15 @@ function renderHistory(data) {
             </div>
           </div>
 
-          <!-- Ringkasan bar -->
           <div class="history-mini-chart">
             ${history
               .map(
                 (h) =>
-                  `<div class="mini-bar ${h.status}" title="${new Date(h.timestamp).toLocaleString("id-ID")} - ${h.status === "up" ? "Online" : "Offline"}"></div>`,
+                  `<div class="mini-bar ${h.status}" title="${new Date(h.timestamp).toLocaleString(loc)} - ${h.status === "up" ? t("online") : t("offline")}"></div>`,
               )
               .join("")}
           </div>
 
-          <!-- Timeline segmen -->
           <div class="history-timeline">
             ${segments
               .map(
@@ -233,13 +335,13 @@ function renderHistory(data) {
                 <div class="timeline-dot ${seg.status}"></div>
                 <div class="timeline-content">
                   <div class="timeline-status">
-                    ${seg.status === "up" ? "✅ Online" : "❌ Offline"}
+                    ${seg.status === "up" ? t("onlineBadge", { check: "✅" }) : t("offlineBadge", { cross: "❌" })}
                   </div>
                   <div class="timeline-time">
-                    ${new Date(seg.start).toLocaleString("id-ID")}
-                    ${seg.start !== seg.end ? ` — ${new Date(seg.end).toLocaleString("id-ID")}` : ""}
+                    ${new Date(seg.start).toLocaleString(loc)}
+                    ${seg.start !== seg.end ? ` — ${new Date(seg.end).toLocaleString(loc)}` : ""}
                   </div>
-                  ${seg.count > 1 ? `<div class="timeline-duration">${seg.count} check berturut-turut</div>` : ""}
+                  ${seg.count > 1 ? `<div class="timeline-duration">${t("consecutiveChecks", { count: seg.count })}</div>` : ""}
                 </div>
               </div>
             `,
@@ -266,8 +368,10 @@ window.addEventListener("resize", () => {
 });
 
 // ===== AUTO REFRESH =====
-// Refresh setiap 30 detik
 setInterval(checkAllServices, 30000);
 
 // ===== LOAD PERTAMA =====
-document.addEventListener("DOMContentLoaded", checkAllServices);
+document.addEventListener("DOMContentLoaded", () => {
+  applyStaticTranslations();
+  checkAllServices();
+});

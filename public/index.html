@@ -3,17 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Uptime Monitor - Status Layanan</title>
+    <title data-i18n="title">Uptime Monitor - Status Layanan</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
+      <!-- Language Toggle -->
+      <div class="lang-bar">
+        <button id="langToggle" class="lang-btn" onclick="toggleLanguage()">
+          EN
+        </button>
+      </div>
+
       <!-- Navigation -->
       <nav class="nav-menu">
         <button
           class="nav-item active"
           data-page="dashboard"
           onclick="showPage('dashboard')"
+          data-i18n="navDashboard"
         >
           Dashboard
         </button>
@@ -21,6 +29,7 @@
           class="nav-item"
           data-page="history"
           onclick="showPage('history')"
+          data-i18n="navHistory"
         >
           History Down
         </button>
@@ -28,46 +37,59 @@
 
       <!-- Dashboard Page -->
       <div id="page-dashboard" class="page active">
-        <h1>Status Layanan</h1>
-        <p class="subtitle">Monitor ketersediaan layanan secara real-time</p>
+        <h1 data-i18n="dashboardTitle">Status Layanan</h1>
+        <p class="subtitle" data-i18n="dashboardSubtitle">
+          Monitor ketersediaan layanan secara real-time
+        </p>
 
         <div class="status-summary" id="summary">
           <div class="status-item">
             <span class="number total" id="totalServices">0</span>
-            <span class="label">Total Layanan</span>
+            <span class="label" data-i18n="totalLayanan">Total Layanan</span>
           </div>
           <div class="status-item">
             <span class="number up" id="upServices">0</span>
-            <span class="label">Online</span>
+            <span class="label" data-i18n="onlineLabel">Online</span>
           </div>
           <div class="status-item">
             <span class="number down" id="downServices">0</span>
-            <span class="label">Offline</span>
+            <span class="label" data-i18n="offlineLabel">Offline</span>
           </div>
         </div>
 
         <div id="servicesList">
-          <div class="loading">Memuat data layanan...</div>
+          <div class="loading" data-i18n="checkingServices">
+            Mengecek layanan...
+          </div>
         </div>
 
-        <button class="refresh-btn" onclick="checkAllServices()">
+        <button
+          class="refresh-btn"
+          onclick="checkAllServices()"
+          data-i18n="refreshBtn"
+        >
           Refresh Status
         </button>
       </div>
 
       <!-- History Page -->
       <div id="page-history" class="page">
-        <h1>History</h1>
-        <p class="subtitle">Riwayat lengkap kapan layanan down dan up</p>
+        <h1 data-i18n="historyTitle">History Down</h1>
+        <p class="subtitle" data-i18n="historySubtitle">
+          Riwayat lengkap kapan layanan down dan up
+        </p>
 
         <div id="historyList">
-          <div class="loading">Memuat riwayat layanan...</div>
+          <div class="loading" data-i18n="loadingHistory">
+            Memuat riwayat...
+          </div>
         </div>
       </div>
 
       <!-- Footer -->
       <div class="footer">
-        Terakhir diperbarui: <span id="lastUpdate">-</span>
+        <span data-i18n="footerText">Terakhir diperbarui:</span>
+        <span id="lastUpdate">-</span>
       </div>
     </div>
 
