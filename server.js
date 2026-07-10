@@ -68,7 +68,8 @@ function mapRow(row) {
 const services = [
   { name: "Google", url: "https://google.com" },
   { name: "WinPoin", url: "https://winpoin.com" },
-  { name: "Personal Blog Gylang", url: "https://gylang.my.id" },
+  { name: "Portofolio", url: "https://gylang.my.id" },
+  { name: "Personal Blog Gylang", url: "https://blog.gylang.my.id" },
   {
     name: "MyBike - Management Kendaraan",
     url: "https://my-bike.gylang.my.id",
