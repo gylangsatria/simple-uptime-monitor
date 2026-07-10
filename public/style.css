@@ -135,6 +135,8 @@ h1 {
 }
 
 .service-info {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -185,9 +187,10 @@ h1 {
 }
 
 .history-chart {
-  display: grid;
+  display: flex;
   gap: 3px;
   padding: 8px 0;
+  width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
@@ -203,12 +206,11 @@ h1 {
 }
 
 .history-bar {
-  width: 100%;
-  min-height: 18px;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 20px;
   border-radius: 999px;
   background: #d1d5db;
-  position: relative;
-  overflow: hidden;
 }
 
 .history-bar.up {

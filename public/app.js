@@ -210,7 +210,7 @@ function renderServices(results) {
                 ${service.error ? `<div class="error-msg">⚠️ ${service.error}</div>` : ""}
                 <div class="history-container">
                     <div class="history-title">${t("statusHistory", { count: barCount })}</div>
-                    <div class="history-chart" style="grid-template-columns: repeat(${barCount}, 1fr);">
+                    <div class="history-chart">
                         ${bars.join("")}
                     </div>
                     <div class="history-legend">
