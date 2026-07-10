@@ -79,6 +79,44 @@
           Riwayat lengkap kapan layanan down dan up
         </p>
 
+        <div class="history-filters">
+          <input
+            type="text"
+            id="historySearch"
+            class="filter-input"
+            placeholder="Cari layanan..."
+            data-i18n="searchPlaceholder"
+            oninput="applyHistoryFilters()"
+          />
+          <select
+            id="historyStatus"
+            class="filter-select"
+            onchange="applyHistoryFilters()"
+          >
+            <option value="all" data-i18n="filterAll">Semua</option>
+            <option value="down" data-i18n="offlineLabel">Down</option>
+            <option value="up" data-i18n="onlineLabel">Up</option>
+          </select>
+          <span class="filter-date-wrap">
+            <span class="filter-date-label" data-i18n="filterFrom">Dari</span>
+            <input
+              type="date"
+              id="historyFrom"
+              class="filter-date"
+              onchange="applyHistoryFilters()"
+            />
+          </span>
+          <span class="filter-date-wrap">
+            <span class="filter-date-label" data-i18n="filterTo">Sampai</span>
+            <input
+              type="date"
+              id="historyTo"
+              class="filter-date"
+              onchange="applyHistoryFilters()"
+            />
+          </span>
+        </div>
+
         <div id="historyList">
           <div class="loading" data-i18n="loadingHistory">
             Memuat riwayat...

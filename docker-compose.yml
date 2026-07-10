@@ -11,6 +11,7 @@ services:
     volumes:
       - ./public:/app/public:ro
       - ./server.js:/app/server.js:ro
+      - ./data:/app/data
     networks:
       - cloudflare-tunnel-vps
 

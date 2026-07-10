@@ -29,6 +29,10 @@ const translations = {
     noHistoryData: "Tidak ada data riwayat",
     na: "N/A",
     consecutiveChecks: "{count} check berturut-turut",
+    searchPlaceholder: "Cari layanan...",
+    filterAll: "Semua",
+    filterFrom: "Dari",
+    filterTo: "Sampai",
     locale: "id-ID",
   },
   en: {
@@ -58,6 +62,10 @@ const translations = {
     noHistoryData: "No history data available",
     na: "N/A",
     consecutiveChecks: "{count} consecutive checks",
+    searchPlaceholder: "Search service...",
+    filterAll: "All",
+    filterFrom: "From",
+    filterTo: "To",
     locale: "en-US",
   },
 };
@@ -98,7 +106,11 @@ function toggleLanguage() {
 function applyStaticTranslations() {
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
-    el.textContent = t(key);
+    if (el.placeholder !== undefined) {
+      el.placeholder = t(key);
+    } else {
+      el.textContent = t(key);
+    }
   });
   // Update tombol toggle
   const toggleBtn = document.getElementById("langToggle");
@@ -177,7 +189,17 @@ function renderServices(results) {
 
   listElement.innerHTML = results
     .map((service) => {
-      const history = service.history.slice(-barCount);
+      const raw = service.history.slice(-barCount);
+      // Selalu render persis barCount bar, sisanya warna netral
+      const bars = [];
+      for (let i = 0; i < barCount; i++) {
+        const idx = raw.length - barCount + i;
+        if (idx >= 0 && raw[idx]) {
+          bars.push(`<div class="history-bar ${raw[idx].status}"></div>`);
+        } else {
+          bars.push(`<div class="history-bar pending"></div>`);
+        }
+      }
       return `
         <div class="service-card ${service.status === "down" ? "down" : ""}">
             <div class="service-info">
@@ -188,15 +210,8 @@ function renderServices(results) {
                 ${service.error ? `<div class="error-msg">⚠️ ${service.error}</div>` : ""}
                 <div class="history-container">
                     <div class="history-title">${t("statusHistory", { count: barCount })}</div>
-                    <div class="history-chart" style="grid-template-columns: repeat(${history.length}, 1fr);">
-                        ${history
-                          .map(
-                            (point) => `
-                            <div class="history-bar ${point.status}">
-                            </div>
-                        `,
-                          )
-                          .join("")}
+                    <div class="history-chart" style="grid-template-columns: repeat(${barCount}, 1fr);">
+                        ${bars.join("")}
                     </div>
                     <div class="history-legend">
                         <span><span class="history-dot up"></span>${t("online")}</span>
@@ -237,8 +252,23 @@ async function loadHistoryData() {
   const historyList = document.getElementById("historyList");
   historyList.innerHTML = `<div class="loading">${t("loadingHistory")}</div>`;
 
+  // Kumpulkan filter params
+  const params = new URLSearchParams();
+  const search = document.getElementById("historySearch")?.value.trim();
+  const status = document.getElementById("historyStatus")?.value;
+  const from = document.getElementById("historyFrom")?.value;
+  const to = document.getElementById("historyTo")?.value;
+
+  if (search) params.set("search", search);
+  if (status && status !== "all") params.set("status", status);
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+
+  const queryString = params.toString();
+  const url = queryString ? `/api/history?${queryString}` : "/api/history";
+
   try {
-    const response = await fetch("/api/history");
+    const response = await fetch(url);
     const result = await response.json();
 
     if (result.success) {
@@ -352,6 +382,11 @@ function renderHistory(data) {
       `;
     })
     .join("");
+}
+
+// ===== FILTER HISTORY =====
+function applyHistoryFilters() {
+  loadHistoryData();
 }
 
 // ===== RESPONSIVE: Re-render saat resize =====

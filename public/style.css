@@ -186,7 +186,6 @@ h1 {
 
 .history-chart {
   display: grid;
-  grid-template-columns: repeat(24, minmax(8px, 1fr));
   gap: 3px;
   padding: 8px 0;
   overflow-x: auto;
@@ -218,6 +217,10 @@ h1 {
 
 .history-bar.down {
   background: #ef4444;
+}
+
+.history-bar.pending {
+  background: #e5e7eb;
 }
 
 .history-legend {
@@ -290,6 +293,60 @@ h1 {
   color: #ef4444;
   font-size: 0.85em;
   margin-top: 5px;
+}
+
+/* ===== FILTER HISTORY ===== */
+.history-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-input,
+.filter-select,
+.filter-date {
+  padding: 10px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9em;
+  background: #f8f9fa;
+  color: #333;
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.filter-input {
+  flex: 1;
+  min-width: 160px;
+}
+
+.filter-input:focus,
+.filter-select:focus,
+.filter-date:focus {
+  border-color: #667eea;
+  background: #fff;
+}
+
+.filter-select {
+  min-width: 100px;
+  cursor: pointer;
+}
+
+.filter-date {
+  min-width: 130px;
+}
+
+.filter-date-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filter-date-label {
+  font-size: 0.85em;
+  color: #666;
+  white-space: nowrap;
 }
 
 /* ===== NAVIGASI ===== */
