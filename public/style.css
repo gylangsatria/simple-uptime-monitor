@@ -186,28 +186,15 @@ h1 {
   font-weight: 600;
 }
 
+/* ===== DASHBOARD HISTORY CHART (CSS GRID) ===== */
 .history-chart {
-  display: flex;
+  display: grid;
   gap: 3px;
   padding: 8px 0;
   width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-
-.history-chart::-webkit-scrollbar {
-  height: 4px;
-}
-
-.history-chart::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 4px;
 }
 
 .history-bar {
-  flex: 1 1 0;
-  min-width: 0;
   height: 20px;
   border-radius: 999px;
   background: #d1d5db;
@@ -477,31 +464,27 @@ h1 {
   color: #667eea;
 }
 
-/* Mini chart ringkasan */
-.history-mini-chart {
-  display: grid;
-  grid-template-columns: repeat(100, 1fr);
-  gap: 2px;
-  padding: 8px 0;
-  margin-bottom: 12px;
+/* ===== UPTIME PROGRESS BAR ===== */
+.uptime-progress {
+  display: flex;
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e5e7eb;
+  margin-bottom: 14px;
 }
 
-.mini-bar {
-  height: 10px;
-  border-radius: 2px;
-  transition: transform 0.2s ease;
-  cursor: help;
+.uptime-fill {
+  height: 100%;
+  transition: width 0.3s ease;
 }
 
-.mini-bar:hover {
-  transform: scaleY(1.5);
-}
-
-.mini-bar.up {
+.uptime-fill.up {
   background: #10b981;
 }
 
-.mini-bar.down {
+.uptime-fill.down {
   background: #ef4444;
 }
 
@@ -687,7 +670,11 @@ h1 {
   }
 
   .history-bar {
-    min-height: 14px;
+    height: 14px;
+  }
+
+  .history-chart {
+    gap: 2px;
   }
 
   .history-title {
@@ -713,12 +700,8 @@ h1 {
     justify-content: flex-start;
   }
 
-  .history-mini-chart {
-    gap: 1.5px;
-  }
-
-  .mini-bar {
-    height: 8px;
+  .uptime-progress {
+    height: 10px;
   }
 
   .lang-btn {
@@ -790,7 +773,11 @@ h1 {
   }
 
   .history-bar {
-    min-height: 12px;
+    height: 12px;
+  }
+
+  .history-chart {
+    gap: 1.5px;
   }
 
   .history-title {
@@ -812,12 +799,8 @@ h1 {
     padding: 10px;
   }
 
-  .history-mini-chart {
-    gap: 1px;
-  }
-
-  .mini-bar {
-    height: 6px;
+  .uptime-progress {
+    height: 8px;
   }
 
   .history-timeline {

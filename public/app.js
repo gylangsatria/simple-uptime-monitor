@@ -34,6 +34,7 @@ const translations = {
     filterFrom: "Dari",
     filterTo: "Sampai",
     locale: "id-ID",
+    clickDetail: "Klik untuk detail riwayat",
   },
   en: {
     title: "Uptime Monitor - Service Status",
@@ -67,6 +68,7 @@ const translations = {
     filterFrom: "From",
     filterTo: "To",
     locale: "en-US",
+    clickDetail: "Click for history details",
   },
 };
 
@@ -89,7 +91,6 @@ function setLanguage(lang) {
   localStorage.setItem(LANG_STORAGE_KEY, lang);
   document.documentElement.lang = lang === "en" ? "en" : "id";
   applyStaticTranslations();
-  // Re-render halaman yang aktif
   const activePage = document.querySelector(".page.active");
   if (activePage) {
     const id = activePage.id.replace("page-", "");
@@ -102,7 +103,6 @@ function toggleLanguage() {
   setLanguage(currentLang === "id" ? "en" : "id");
 }
 
-// Terjemahkan elemen HTML statis yang punya data-i18n
 function applyStaticTranslations() {
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
@@ -112,7 +112,6 @@ function applyStaticTranslations() {
       el.textContent = t(key);
     }
   });
-  // Update tombol toggle
   const toggleBtn = document.getElementById("langToggle");
   if (toggleBtn) toggleBtn.textContent = currentLang === "id" ? "EN" : "ID";
 }
@@ -122,16 +121,13 @@ function showPage(pageName) {
   document.querySelectorAll(".page").forEach((page) => {
     page.classList.remove("active");
   });
-
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.classList.remove("active");
   });
-
   document.getElementById(`page-${pageName}`).classList.add("active");
   document
     .querySelector(`.nav-item[data-page="${pageName}"]`)
     .classList.add("active");
-
   if (pageName === "history") {
     loadHistoryData();
   }
@@ -156,14 +152,14 @@ async function checkAllServices() {
   } catch (error) {
     console.error("Error fetching status:", error);
     listElement.innerHTML = `
-            <div class="loading" style="color: #ef4444;">
-                ❌ ${t("fetchFailed")}: ${error.message}
-                <br><br>
-                <button onclick="checkAllServices()" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                    ${t("tryAgain")}
-                </button>
-            </div>
-        `;
+      <div class="loading" style="color: #ef4444;">
+        ❌ ${t("fetchFailed")}: ${error.message}
+        <br><br>
+        <button onclick="checkAllServices()" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
+          ${t("tryAgain")}
+        </button>
+      </div>
+    `;
   }
 }
 
@@ -176,55 +172,50 @@ function getBarCount() {
   return 24;
 }
 
-// ===== RENDER HASIL =====
+// ===== RENDER DASHBOARD =====
 function renderServices(results) {
   const listElement = document.getElementById("servicesList");
-
   if (results.length === 0) {
     listElement.innerHTML = `<div class="loading">${t("noServices")}</div>`;
     return;
   }
-
   const barCount = getBarCount();
 
   listElement.innerHTML = results
     .map((service) => {
       const raw = service.history.slice(-barCount);
-      // Selalu render persis barCount bar, sisanya warna netral
-      const bars = [];
-      for (let i = 0; i < barCount; i++) {
-        const idx = raw.length - barCount + i;
-        if (idx >= 0 && raw[idx]) {
-          bars.push(`<div class="history-bar ${raw[idx].status}"></div>`);
-        } else {
-          bars.push(`<div class="history-bar pending"></div>`);
-        }
-      }
+      const upCount = raw.filter((h) => h.status === "up").length;
+      const downCount = raw.filter((h) => h.status === "down").length;
+      const totalCount = raw.length;
+      const uptimePercent = totalCount > 0 ? ((upCount / totalCount) * 100).toFixed(1) : "0";
+      const downPercent = totalCount > 0 ? ((downCount / totalCount) * 100).toFixed(1) : "0";
+
       return `
         <div class="service-card ${service.status === "down" ? "down" : ""}">
-            <div class="service-info">
-                <div class="service-name">${service.name}</div>
-                <div class="service-url">${service.url}</div>
-                ${service.responseTime ? `<div style="color:#666;font-size:0.8em;">⏱️ ${service.responseTime}ms</div>` : ""}
-                ${service.statusCode ? `<div style="color:#666;font-size:0.8em;">HTTP ${service.statusCode}</div>` : ""}
-                ${service.error ? `<div class="error-msg">⚠️ ${service.error}</div>` : ""}
-                <div class="history-container">
-                    <div class="history-title">${t("statusHistory", { count: barCount })}</div>
-                    <div class="history-chart">
-                        ${bars.join("")}
-                    </div>
-                    <div class="history-legend">
-                        <span><span class="history-dot up"></span>${t("online")}</span>
-                        <span><span class="history-dot down"></span>${t("offline")}</span>
-                    </div>
-                </div>
+          <div class="service-info">
+            <div class="service-name">${service.name}</div>
+            <div class="service-url">${service.url}</div>
+            ${service.responseTime ? `<div style="color:#666;font-size:0.8em;">⏱️ ${service.responseTime}ms</div>` : ""}
+            ${service.statusCode ? `<div style="color:#666;font-size:0.8em;">HTTP ${service.statusCode}</div>` : ""}
+            ${service.error ? `<div class="error-msg">⚠️ ${service.error}</div>` : ""}
+            <div class="history-container">
+              <div class="history-title">${t("statusHistory", { count: barCount })} — ${uptimePercent}% ${t("online")}</div>
+              <div class="uptime-progress">
+                <div class="uptime-fill up" style="width:${uptimePercent}%"></div>
+                <div class="uptime-fill down" style="width:${downPercent}%"></div>
+              </div>
+              <div class="history-legend">
+                <span><span class="history-dot up"></span>${t("online")} <strong>${upCount}/${totalCount}</strong></span>
+                <span><span class="history-dot down"></span>${t("offline")} <strong>${downCount}/${totalCount}</strong></span>
+              </div>
             </div>
-            <div class="service-status">
-                <span class="status-badge ${service.status === "down" ? "down" : ""}">
-                    ${service.status === "up" ? t("onlineBadge", { check: "✅" }) : t("offlineBadge", { cross: "❌" })}
-                </span>
-                <span class="last-check">${new Date(service.lastChecked).toLocaleTimeString(locale())}</span>
-            </div>
+          </div>
+          <div class="service-status">
+            <span class="status-badge ${service.status === "down" ? "down" : ""}">
+              ${service.status === "up" ? t("onlineBadge", { check: "✅" }) : t("offlineBadge", { cross: "❌" })}
+            </span>
+            <span class="last-check">${new Date(service.lastChecked).toLocaleTimeString(locale())}</span>
+          </div>
         </div>
       `;
     })
@@ -235,24 +226,21 @@ function updateSummary(results) {
   const total = results.length;
   const up = results.filter((r) => r.status === "up").length;
   const down = results.filter((r) => r.status === "down").length;
-
   document.getElementById("totalServices").textContent = total;
   document.getElementById("upServices").textContent = up;
   document.getElementById("downServices").textContent = down;
 }
 
 function updateFooterTimestamp(timestamp) {
-  document.getElementById("lastUpdate").textContent = new Date(
-    timestamp,
-  ).toLocaleString(locale());
+  const el = document.getElementById("lastUpdate");
+  if (el) el.textContent = new Date(timestamp).toLocaleString(locale());
 }
 
-// ===== HISTORY DOWN =====
+// ===== HISTORY PAGE =====
 async function loadHistoryData() {
   const historyList = document.getElementById("historyList");
   historyList.innerHTML = `<div class="loading">${t("loadingHistory")}</div>`;
 
-  // Kumpulkan filter params
   const params = new URLSearchParams();
   const search = document.getElementById("historySearch")?.value.trim();
   const status = document.getElementById("historyStatus")?.value;
@@ -264,13 +252,9 @@ async function loadHistoryData() {
   if (from) params.set("from", from);
   if (to) params.set("to", to);
 
-  const queryString = params.toString();
-  const url = queryString ? `/api/history?${queryString}` : "/api/history";
-
   try {
-    const response = await fetch(url);
+    const response = await fetch(`/api/history?${params.toString()}`);
     const result = await response.json();
-
     if (result.success) {
       renderHistory(result.data);
       updateFooterTimestamp(result.timestamp);
@@ -280,26 +264,28 @@ async function loadHistoryData() {
   } catch (error) {
     console.error("Error fetching history:", error);
     historyList.innerHTML = `
-      <div class="loading" style="color: #ef4444;">
-        ❌ ${t("fetchHistoryFailed")}: ${error.message}
-        <br><br>
-        <button onclick="loadHistoryData()" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
-          ${t("tryAgain")}
-        </button>
-      </div>
+      <div class="loading" style="color: #ef4444;">❌ ${t("fetchHistoryFailed")}: ${error.message}</div>
     `;
+  }
+}
+
+function toggleHistoryDetail(id) {
+  const el = document.getElementById(`detail-${id}`);
+  const icon = document.getElementById(`icon-${id}`);
+  if (el) {
+    const isHidden = el.style.display === "none" || !el.style.display;
+    el.style.display = isHidden ? "block" : "none";
+    if (icon) icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
   }
 }
 
 function renderHistory(data) {
   const historyList = document.getElementById("historyList");
-
   if (!data || data.length === 0) {
     historyList.innerHTML = `<div class="loading">${t("noHistoryData")}</div>`;
     return;
   }
 
-  // Urutkan: service dengan history down terbanyak di atas
   const sorted = [...data].sort((a, b) => {
     const downA = a.history.filter((h) => h.status === "down").length;
     const downB = b.history.filter((h) => h.status === "down").length;
@@ -309,26 +295,26 @@ function renderHistory(data) {
   const loc = locale();
 
   historyList.innerHTML = sorted
-    .map((service) => {
-      const history = [...service.history].reverse();
-      const downCount = history.filter((h) => h.status === "down").length;
-      const upCount = history.filter((h) => h.status === "up").length;
-      const totalCount = history.length;
-      const uptimePercent =
-        totalCount > 0 ? ((upCount / totalCount) * 100).toFixed(1) : t("na");
+    .map((service, index) => {
+      const allHistory = service.history || [];
+      const allReversed = [...allHistory].reverse();
+      const downCount = allReversed.filter((h) => h.status === "down").length;
+      const upCount = allReversed.filter((h) => h.status === "up").length;
+      const totalCount = allReversed.length;
+      const uptimePercent = totalCount > 0 ? ((upCount / totalCount) * 100).toFixed(1) : "0";
+      const downPercent = totalCount > 0 ? ((downCount / totalCount) * 100).toFixed(1) : "0";
 
-      // Kelompokkan history menjadi segmen up/down berurutan
       const segments = [];
-      for (let i = 0; i < history.length; i++) {
+      for (let i = 0; i < allReversed.length; i++) {
         const lastSegment = segments[segments.length - 1];
-        if (lastSegment && lastSegment.status === history[i].status) {
-          lastSegment.end = history[i].timestamp;
+        if (lastSegment && lastSegment.status === allReversed[i].status) {
+          lastSegment.end = allReversed[i].timestamp;
           lastSegment.count++;
         } else {
           segments.push({
-            status: history[i].status,
-            start: history[i].timestamp,
-            end: history[i].timestamp,
+            status: allReversed[i].status,
+            start: allReversed[i].timestamp,
+            end: allReversed[i].timestamp,
             count: 1,
           });
         }
@@ -336,10 +322,14 @@ function renderHistory(data) {
 
       return `
         <div class="history-service-card ${service.status === "down" ? "down" : ""}">
-          <div class="history-service-header">
+          <div class="history-service-header" onclick="toggleHistoryDetail(${index})" style="cursor:pointer; user-select:none;">
             <div class="history-service-info">
-              <div class="history-service-name">${service.name}</div>
+              <div class="history-service-name">
+                ${service.name} 
+                <span id="icon-${index}" style="display:inline-block; transition:transform 0.3s; font-size:0.8em; margin-left:5px;">▼</span>
+              </div>
               <div class="history-service-url">${service.url}</div>
+              <div style="font-size:0.75em; color:#888; margin-top:4px;">${t("clickDetail")}</div>
             </div>
             <div class="history-service-stats">
               <span class="stat-item stat-up">⬆ ${upCount}</span>
@@ -348,35 +338,34 @@ function renderHistory(data) {
             </div>
           </div>
 
-          <div class="history-mini-chart">
-            ${history
-              .map(
-                (h) =>
-                  `<div class="mini-bar ${h.status}" title="${new Date(h.timestamp).toLocaleString(loc)} - ${h.status === "up" ? t("online") : t("offline")}"></div>`,
-              )
-              .join("")}
+          <div class="uptime-progress" style="margin-top:12px;">
+            <div class="uptime-fill up" style="width:${uptimePercent}%"></div>
+            <div class="uptime-fill down" style="width:${downPercent}%"></div>
           </div>
 
-          <div class="history-timeline">
-            ${segments
-              .map(
-                (seg) => `
-              <div class="timeline-item ${seg.status}">
-                <div class="timeline-dot ${seg.status}"></div>
-                <div class="timeline-content">
-                  <div class="timeline-status">
-                    ${seg.status === "up" ? t("onlineBadge", { check: "✅" }) : t("offlineBadge", { cross: "❌" })}
+          <!-- Bagian Detail yang bisa di-toggle -->
+          <div id="detail-${index}" style="display:none; margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
+            <div class="history-timeline">
+              ${segments
+                .map(
+                  (seg) => `
+                <div class="timeline-item ${seg.status}">
+                  <div class="timeline-dot ${seg.status}"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-status">
+                      ${seg.status === "up" ? t("onlineBadge", { check: "✅" }) : t("offlineBadge", { cross: "❌" })}
+                    </div>
+                    <div class="timeline-time">
+                      ${new Date(seg.start).toLocaleString(loc)}
+                      ${seg.start !== seg.end ? ` — ${new Date(seg.end).toLocaleString(loc)}` : ""}
+                    </div>
+                    ${seg.count > 1 ? `<div class="timeline-duration">${t("consecutiveChecks", { count: seg.count })}</div>` : ""}
                   </div>
-                  <div class="timeline-time">
-                    ${new Date(seg.start).toLocaleString(loc)}
-                    ${seg.start !== seg.end ? ` — ${new Date(seg.end).toLocaleString(loc)}` : ""}
-                  </div>
-                  ${seg.count > 1 ? `<div class="timeline-duration">${t("consecutiveChecks", { count: seg.count })}</div>` : ""}
                 </div>
-              </div>
-            `,
-              )
-              .join("")}
+              `,
+                )
+                .join("")}
+            </div>
           </div>
         </div>
       `;
@@ -389,16 +378,16 @@ function applyHistoryFilters() {
   loadHistoryData();
 }
 
-// ===== RESPONSIVE: Re-render saat resize =====
+// ===== RESPONSIVE =====
 let resizeTimer;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    if (
-      document.getElementById("page-dashboard").classList.contains("active")
-    ) {
-      checkAllServices();
-    }
+    const activePage = document.querySelector(".page.active");
+    if (!activePage) return;
+    const id = activePage.id.replace("page-", "");
+    if (id === "dashboard") checkAllServices();
+    else if (id === "history") loadHistoryData();
   }, 500);
 });
 
