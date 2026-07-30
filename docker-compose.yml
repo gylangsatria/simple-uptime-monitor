@@ -8,6 +8,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5090
+      - TZ=Asia/Jakarta
     volumes:
       - ./public:/app/public:ro
       - ./server.js:/app/server.js:ro

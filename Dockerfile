@@ -1,6 +1,10 @@
 # Gunakan image Node.js versi 18 (LTS)
 FROM node:18-alpine
 
+# Set timezone Jakarta
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Jakarta
+
 # Buat working directory
 WORKDIR /app
 
