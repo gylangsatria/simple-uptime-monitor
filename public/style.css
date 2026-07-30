@@ -488,6 +488,10 @@ h1 {
   background: #ef4444;
 }
 
+.uptime-progress.down {
+  background: #fca5a5;
+}
+
 /* Timeline */
 .history-timeline {
   display: flex;

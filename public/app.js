@@ -189,6 +189,8 @@ function renderServices(results) {
       const totalCount = raw.length;
       const uptimePercent = totalCount > 0 ? ((upCount / totalCount) * 100).toFixed(1) : "0";
       const downPercent = totalCount > 0 ? ((downCount / totalCount) * 100).toFixed(1) : "0";
+      const barUpWidth = service.status === "down" ? "0%" : `${uptimePercent}%`;
+      const barDownWidth = service.status === "down" ? "100%" : `${downPercent}%`;
 
       return `
         <div class="service-card ${service.status === "down" ? "down" : ""}">
@@ -200,9 +202,9 @@ function renderServices(results) {
             ${service.error ? `<div class="error-msg">⚠️ ${service.error}</div>` : ""}
             <div class="history-container">
               <div class="history-title">${t("statusHistory", { count: barCount })} — ${uptimePercent}% ${t("online")}</div>
-              <div class="uptime-progress">
-                <div class="uptime-fill up" style="width:${uptimePercent}%"></div>
-                <div class="uptime-fill down" style="width:${downPercent}%"></div>
+              <div class="uptime-progress ${service.status === "down" ? "down" : ""}">
+                <div class="uptime-fill up" style="width:${barUpWidth}%"></div>
+                <div class="uptime-fill down" style="width:${barDownWidth}%"></div>
               </div>
               <div class="history-legend">
                 <span><span class="history-dot up"></span>${t("online")} <strong>${upCount}/${totalCount}</strong></span>
