@@ -203,8 +203,8 @@ function renderServices(results) {
             <div class="history-container">
               <div class="history-title">${t("statusHistory", { count: barCount })} — ${uptimePercent}% ${t("online")}</div>
               <div class="uptime-progress ${service.status === "down" ? "down" : ""}">
-                <div class="uptime-fill up" style="width:${barUpWidth}%"></div>
-                <div class="uptime-fill down" style="width:${barDownWidth}%"></div>
+                <div class="uptime-fill up" style="width:${barUpWidth}"></div>
+                <div class="uptime-fill down" style="width:${barDownWidth}"></div>
               </div>
               <div class="history-legend">
                 <span><span class="history-dot up"></span>${t("online")} <strong>${upCount}/${totalCount}</strong></span>
