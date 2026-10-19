@@ -3,6 +3,7 @@ const axios = require("axios");
 const cors = require("cors");
 const path = require("path");
 const Database = require("better-sqlite3");
+const { parseServices } = require("./services");
 
 const app = express();
 const PORT = process.env.PORT || 5090;
@@ -12,7 +13,7 @@ const DB_PATH =
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 // ===== INISIALISASI DATABASE =====
 const db = new Database(DB_PATH);
@@ -27,7 +28,7 @@ db.exec(`
     status_code INTEGER,
     response_time INTEGER,
     error TEXT,
-    checked_at TEXT NOT NULL DEFAULT (datetime('now'))
+    checked_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
   )
 `);
 
@@ -36,23 +37,37 @@ db.exec(`
   ON checks(service_url, checked_at DESC)
 `);
 
+// Migrasi baris lama ("YYYY-MM-DD HH:MM:SS" UTC) ke ISO-8601 UTC ("...T...Z")
+db.exec(`
+  UPDATE checks
+  SET checked_at = replace(checked_at, ' ', 'T') || 'Z'
+  WHERE checked_at NOT LIKE '%Z'
+`);
+
 // Prepared statements
+// checked_at ditulis eksplisit sebagai ISO-8601 UTC, supaya tidak bergantung pada
+// DEFAULT kolom (database lama masih memakai format "YYYY-MM-DD HH:MM:SS").
 const insertCheck = db.prepare(`
-  INSERT INTO checks (service_name, service_url, status, status_code, response_time, error)
-  VALUES (@name, @url, @status, @statusCode, @responseTime, @error)
+  INSERT INTO checks (service_name, service_url, status, status_code, response_time, error, checked_at)
+  VALUES (@name, @url, @status, @statusCode, @responseTime, @error, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+`);
+
+// Layanan yang pernah dipantau tapi kini tidak ada di SERVICES tetap tampil di
+// halaman history (data historis tidak hilang saat daftar layanan diubah).
+const missingServices = db.prepare(`
+  SELECT service_name AS name, service_url AS url
+  FROM checks c
+  WHERE c.id = (SELECT MAX(id) FROM checks WHERE service_url = c.service_url)
+  ORDER BY service_url ASC
 `);
 
 const getRecentChecks = db.prepare(`
-  SELECT * FROM checks
-  WHERE service_url = ?
-  ORDER BY checked_at ASC
-  LIMIT ?
-`);
-
-const getAllChecks = db.prepare(`
-  SELECT * FROM checks
-  WHERE service_url = ?
-  ORDER BY checked_at ASC
+  SELECT * FROM (
+    SELECT * FROM checks
+    WHERE service_url = ?
+    ORDER BY checked_at DESC, id DESC
+    LIMIT ?
+  ) ORDER BY checked_at ASC, id ASC
 `);
 
 function mapRow(row) {
@@ -64,18 +79,26 @@ function mapRow(row) {
   };
 }
 
-// ===== KONFIGURASI LAYANAN =====
-const services = [
-  { name: "Google", url: "https://google.com" },
-  { name: "WinPoin", url: "https://winpoin.com" },
-  { name: "Portofolio", url: "https://gylang.my.id" },
-  { name: "Personal Blog Gylang", url: "https://blog.gylang.my.id" },
-  {
-    name: "MyBike - Management Kendaraan",
-    url: "https://my-bike.gylang.my.id",
-  },
-  { name: "API Harga BBM", url: "https://api.gylang.my.id/api/harga-bbm" },
-];
+// Batas hari (waktu lokal server) -> ISO UTC, supaya filter tanggal akurat
+function dayBound(date, endOfDay) {
+  const d = new Date(`${date}T${endOfDay ? "23:59:59.999" : "00:00:00.000"}`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+// SERVER_HISTORY_POINTS: jumlah check terakhir yang dikirim ke bar chart dashboard
+const HISTORY_POINTS = 48;
+// HISTORY_LIMIT: batas maksimum baris per layanan di halaman history
+const HISTORY_LIMIT = 2000;
+
+// ===== KONFIGURASI LAYANAN (dari env SERVICES) =====
+// Contoh: SERVICES="Google|https://google.com, WinPoin|https://winpoin.com"
+const services = parseServices(process.env.SERVICES);
+
+if (!services.length) {
+  console.warn(
+    "SERVICES kosong/tidak valid. Set di .env, mis: SERVICES=\"Google|https://google.com\"",
+  );
+}
 
 // ===== FUNGSI CEK SATU LAYANAN =====
 async function checkService(service) {
@@ -134,7 +157,7 @@ app.get("/api/status", async (req, res) => {
     const results = await Promise.all(
       services.map(async (service) => {
         const result = await checkService(service);
-        const rows = getRecentChecks.all(service.url, 24);
+        const rows = getRecentChecks.all(service.url, HISTORY_POINTS);
         return { ...result, history: rows.map(mapRow) };
       }),
     );
@@ -160,11 +183,18 @@ app.get("/api/history", async (req, res) => {
     // Refresh semua service dulu
     await Promise.all(services.map((s) => checkService(s)));
 
+    // Layanan dari env + layanan yang hanya ada di database (sudah dihapus dari SERVICES)
+    const configured = new Set(services.map((s) => s.url));
+    const allServices = [
+      ...services,
+      ...missingServices.all().filter((s) => !configured.has(s.url)),
+    ];
+
     // Filter service list by search keyword
-    let filteredServices = services;
+    let filteredServices = allServices;
     if (search) {
       const q = search.toLowerCase();
-      filteredServices = services.filter(
+      filteredServices = allServices.filter(
         (s) =>
           s.name.toLowerCase().includes(q) || s.url.toLowerCase().includes(q),
       );
@@ -181,23 +211,29 @@ app.get("/api/history", async (req, res) => {
         }
 
         if (from) {
-          conditions.push("checked_at >= ?");
-          params.push(from);
+          const bound = dayBound(from, false);
+          if (bound) {
+            conditions.push("checked_at >= ?");
+            params.push(bound);
+          }
         }
 
         if (to) {
-          conditions.push("checked_at <= ?");
-          params.push(to);
+          const bound = dayBound(to, true);
+          if (bound) {
+            conditions.push("checked_at <= ?");
+            params.push(bound);
+          }
         }
 
         const rows = db
           .prepare(
             `SELECT * FROM checks
              WHERE ${conditions.join(" AND ")}
-             ORDER BY checked_at ASC
-             LIMIT 5000`,
+             ORDER BY checked_at ASC, id ASC
+             LIMIT ?`,
           )
-          .all(...params);
+          .all(...params, HISTORY_LIMIT);
 
         const history = rows.map(mapRow);
         const last = history.length > 0 ? history[history.length - 1] : null;

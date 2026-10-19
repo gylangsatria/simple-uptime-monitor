@@ -1,136 +1,315 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title data-i18n="title">Uptime Monitor - Status Layanan</title>
-    <link rel="stylesheet" href="style.css?v=2" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- Tema: dibaca sebelum paint (anti-kedip) + toggle didefinisikan di sini,
+         supaya tombol tema tetap bekerja walau app.js (di akhir body) belum selesai dimuat. -->
+    <script>
+      (function () {
+        const KEY = "uptime-theme";
+        let dark = localStorage.getItem(KEY) === "dark";
+        if (!localStorage.getItem(KEY)) {
+          dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        }
+        document.documentElement.classList.toggle("dark", dark);
+
+        window.toggleTheme = function () {
+          const isDark = !document.documentElement.classList.contains("dark");
+          localStorage.setItem(KEY, isDark ? "dark" : "light");
+          document.documentElement.classList.toggle("dark", isDark);
+          const btn = document.getElementById("themeToggle");
+          if (btn) btn.setAttribute("aria-pressed", String(isDark));
+        };
+
+        document.addEventListener("DOMContentLoaded", function () {
+          const btn = document.getElementById("themeToggle");
+          if (btn) {
+            btn.setAttribute("aria-pressed", String(document.documentElement.classList.contains("dark")));
+          }
+        });
+      })();
+    </script>
+
+    <style type="text/tailwindcss">
+      @custom-variant dark (&:where(.dark, .dark *));
+
+      html {
+        color-scheme: light;
+      }
+      html.dark {
+        color-scheme: dark;
+      }
+
+      /* Grafik latency pada layar kecil */
+      .uptime-chart svg {
+        overflow: visible;
+      }
+
+      /* State aktif nav: ditulis di stylesheet (bukan utility data-[active=true])
+         supaya pasti ter-apply saat JS mengubah atribut data-active. */
+      .nav-item[data-active="true"] {
+        @apply bg-indigo-600 text-white shadow-sm;
+      }
+    </style>
   </head>
-  <body>
-    <div class="container">
-      <!-- Language Toggle -->
-      <div class="lang-bar">
-        <button id="langToggle" class="lang-btn" onclick="toggleLanguage()">
+
+  <body
+    class="min-h-dvh bg-slate-100 font-sans text-slate-900 antialiased transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100"
+  >
+    <div class="mx-auto flex min-h-dvh w-full max-w-3xl flex-col px-3 py-4 sm:px-6 sm:py-8">
+      <!-- ===== HEADER ===== -->
+      <header class="mb-3 flex items-center gap-2 sm:mb-5 sm:gap-3">
+        <div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+          <span
+            class="grid size-9 shrink-0 place-items-center rounded-xl bg-indigo-600 text-base font-bold text-white shadow-sm sm:size-10 sm:text-lg"
+            aria-hidden="true"
+            >U</span
+          >
+          <div class="min-w-0">
+            <p class="truncate text-sm font-semibold sm:text-base">Uptime Monitor</p>
+            <p
+              class="truncate text-[11px] text-slate-500 sm:text-xs dark:text-slate-400"
+              data-i18n="appTagline"
+            >
+              Monitor status layanan
+            </p>
+          </div>
+        </div>
+
+        <button
+          id="themeToggle"
+          type="button"
+          onclick="toggleTheme()"
+          title="Theme"
+          aria-label="Toggle theme"
+          class="grid size-9 shrink-0 cursor-pointer place-items-center rounded-xl border border-slate-200 bg-white text-base transition hover:border-indigo-400 hover:text-indigo-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-95 sm:size-10 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
+        >
+          <!-- ikon bulan (light mode) -->
+          <svg
+            class="size-4 dark:hidden"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+          <!-- ikon matahari (dark mode) -->
+          <svg
+            class="hidden size-4 dark:block"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+        </button>
+
+        <button
+          id="langToggle"
+          type="button"
+          onclick="toggleLanguage()"
+          class="h-9 shrink-0 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold tracking-wide text-slate-600 transition hover:border-indigo-400 hover:text-indigo-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-95 sm:h-10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
+        >
           EN
         </button>
-      </div>
+      </header>
 
-      <!-- Navigation -->
-      <nav class="nav-menu">
+      <!-- ===== NAVIGASI ===== -->
+      <nav
+        class="mb-3 flex gap-1 rounded-2xl border border-slate-200 bg-white/70 p-1 backdrop-blur sm:mb-5 dark:border-slate-800 dark:bg-slate-900/70"
+      >
         <button
-          class="nav-item active"
+          type="button"
           data-page="dashboard"
+          data-active="true"
           onclick="showPage('dashboard')"
           data-i18n="navDashboard"
+          class="nav-item flex-1 cursor-pointer rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 transition hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-95 sm:text-sm dark:text-slate-400 dark:hover:text-white"
         >
           Dashboard
         </button>
         <button
-          class="nav-item"
+          type="button"
           data-page="history"
+          data-active="false"
           onclick="showPage('history')"
           data-i18n="navHistory"
+          class="nav-item flex-1 cursor-pointer rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 transition hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-95 sm:text-sm dark:text-slate-400 dark:hover:text-white"
         >
           History Down
         </button>
       </nav>
 
-      <!-- Dashboard Page -->
-      <div id="page-dashboard" class="page active">
-        <h1 data-i18n="dashboardTitle">Status Layanan</h1>
-        <p class="subtitle" data-i18n="dashboardSubtitle">
+      <!-- ===== DASHBOARD ===== -->
+      <main id="page-dashboard" class="page flex-1">
+        <h1 class="text-lg font-bold tracking-tight sm:text-2xl" data-i18n="dashboardTitle">
+          Status Layanan
+        </h1>
+        <p
+          class="mt-1 text-xs text-slate-500 sm:text-sm dark:text-slate-400"
+          data-i18n="dashboardSubtitle"
+        >
           Monitor ketersediaan layanan secara real-time
         </p>
 
-        <div class="status-summary" id="summary">
-          <div class="status-item">
-            <span class="number total" id="totalServices">0</span>
-            <span class="label" data-i18n="totalLayanan">Total Layanan</span>
+        <!-- Ringkasan -->
+        <div class="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
+          <div
+            class="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          >
+            <span
+              id="totalServices"
+              class="block text-xl font-bold text-indigo-600 sm:text-2xl dark:text-indigo-400"
+              >0</span
+            >
+            <span
+              class="text-[10px] text-slate-500 sm:text-xs dark:text-slate-400"
+              data-i18n="totalLayanan"
+              >Total Layanan</span
+            >
           </div>
-          <div class="status-item">
-            <span class="number up" id="upServices">0</span>
-            <span class="label" data-i18n="onlineLabel">Online</span>
+          <div
+            class="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          >
+            <span
+              id="upServices"
+              class="block text-xl font-bold text-emerald-600 sm:text-2xl dark:text-emerald-400"
+              >0</span
+            >
+            <span
+              class="text-[10px] text-slate-500 sm:text-xs dark:text-slate-400"
+              data-i18n="onlineLabel"
+              >Online</span
+            >
           </div>
-          <div class="status-item">
-            <span class="number down" id="downServices">0</span>
-            <span class="label" data-i18n="offlineLabel">Offline</span>
+          <div
+            class="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          >
+            <span
+              id="downServices"
+              class="block text-xl font-bold text-red-600 sm:text-2xl dark:text-red-400"
+              >0</span
+            >
+            <span
+              class="text-[10px] text-slate-500 sm:text-xs dark:text-slate-400"
+              data-i18n="offlineLabel"
+              >Offline</span
+            >
           </div>
         </div>
 
-        <div id="servicesList">
-          <div class="loading" data-i18n="checkingServices">
+        <div id="servicesList" class="mt-4 grid gap-3 sm:mt-5 sm:gap-4">
+          <div
+            class="py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+            data-i18n="checkingServices"
+          >
             Mengecek layanan...
           </div>
         </div>
 
         <button
-          class="refresh-btn"
+          type="button"
           onclick="checkAllServices()"
           data-i18n="refreshBtn"
+          class="mx-auto mt-4 block w-full cursor-pointer rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 sm:mt-5 dark:focus-visible:ring-offset-slate-950"
         >
           Refresh Status
         </button>
-      </div>
+      </main>
 
-      <!-- History Page -->
-      <div id="page-history" class="page">
-        <h1 data-i18n="historyTitle">History Down</h1>
-        <p class="subtitle" data-i18n="historySubtitle">
+      <!-- ===== HISTORY ===== -->
+      <main id="page-history" class="page hidden flex-1">
+        <h1 class="text-lg font-bold tracking-tight sm:text-2xl" data-i18n="historyTitle">History Down</h1>
+        <p
+          class="mt-1 text-xs text-slate-500 sm:text-sm dark:text-slate-400"
+          data-i18n="historySubtitle"
+        >
           Riwayat lengkap kapan layanan down dan up
         </p>
 
-        <div class="history-filters">
+        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <input
             type="text"
             id="historySearch"
-            class="filter-input"
             placeholder="Cari layanan..."
             data-i18n="searchPlaceholder"
             oninput="applyHistoryFilters()"
+            class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700 dark:bg-slate-900 dark:placeholder:text-slate-500"
           />
           <select
             id="historyStatus"
-            class="filter-select"
             onchange="applyHistoryFilters()"
+            class="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700 dark:bg-slate-900"
           >
             <option value="all" data-i18n="filterAll">Semua</option>
             <option value="down" data-i18n="offlineLabel">Down</option>
             <option value="up" data-i18n="onlineLabel">Up</option>
           </select>
-          <span class="filter-date-wrap">
-            <span class="filter-date-label" data-i18n="filterFrom">Dari</span>
+          <div class="flex items-center gap-2">
+            <label
+              for="historyFrom"
+              class="shrink-0 text-xs text-slate-500 dark:text-slate-400"
+              data-i18n="filterFrom"
+              >Dari</label
+            >
             <input
               type="date"
               id="historyFrom"
-              class="filter-date"
               onchange="applyHistoryFilters()"
+              class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 sm:flex-none dark:border-slate-700 dark:bg-slate-900"
             />
-          </span>
-          <span class="filter-date-wrap">
-            <span class="filter-date-label" data-i18n="filterTo">Sampai</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <label
+              for="historyTo"
+              class="shrink-0 text-xs text-slate-500 dark:text-slate-400"
+              data-i18n="filterTo"
+              >Sampai</label
+            >
             <input
               type="date"
               id="historyTo"
-              class="filter-date"
               onchange="applyHistoryFilters()"
+              class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 sm:flex-none dark:border-slate-700 dark:bg-slate-900"
             />
-          </span>
+          </div>
         </div>
 
-        <div id="historyList">
-          <div class="loading" data-i18n="loadingHistory">
+        <div id="historyList" class="mt-4 grid gap-3 sm:mt-5 sm:gap-4">
+          <div
+            class="py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+            data-i18n="loadingHistory"
+          >
             Memuat riwayat...
           </div>
         </div>
-      </div>
+      </main>
 
-      <!-- Footer -->
-      <div class="footer">
+      <!-- ===== FOOTER ===== -->
+      <footer
+        class="mt-6 border-t border-slate-200 pt-4 text-center text-[11px] text-slate-500 sm:text-xs dark:border-slate-800 dark:text-slate-400"
+      >
         <span data-i18n="footerText">Terakhir diperbarui:</span>
         <span id="lastUpdate">-</span>
-      </div>
+      </footer>
     </div>
 
-    <script src="app.js?v=2"></script>
+    <script src="uptime-core.js?v=5"></script>
+    <script src="app.js?v=5"></script>
   </body>
 </html>
